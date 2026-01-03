@@ -195,9 +195,86 @@ body{
 
 /* Mobile */
 @media(max-width:900px){
-  .content{flex-direction:column}
-  .image-box img{height:45vh}
-  .main-btn{bottom:2vh;right:5vw}
+  .slide{
+    padding:2vh 4vw 16vh 4vw;
+  }
+  
+  .content{
+    flex-direction:column;
+    gap:2vh;
+    justify-content:flex-start;
+    overflow-y:auto;
+    overflow-x:hidden;
+    padding-bottom:2vh;
+  }
+  
+  .image-box{
+    flex:none;
+    width:100%;
+    height:auto;
+    min-height:40vh;
+    max-height:45vh;
+  }
+  
+  .image-box img{
+    width:100%;
+    height:auto;
+    max-height:45vh;
+    object-fit:contain;
+  }
+  
+  .text-box{
+    flex:none;
+    width:100%;
+    font-size:0.9rem;
+    line-height:1.6;
+    padding:0 2vw 2vh 2vw;
+    text-align:left;
+    align-items:flex-start;
+    overflow-wrap:break-word;
+    word-wrap:break-word;
+    hyphens:auto;
+  }
+  
+  .main-btn{
+    bottom:8vh;
+    right:50%;
+    transform:translateX(50%);
+    padding:12px 28px;
+    font-size:0.9rem;
+    width:auto;
+    max-width:85vw;
+  }
+  
+  .back-btn{
+    top:2vh;
+    left:4vw;
+    font-size:0.8rem;
+    padding:6px 12px;
+  }
+}
+
+/* Extra small phones */
+@media(max-width:400px){
+  .text-box{
+    font-size:0.85rem;
+    line-height:1.5;
+  }
+  
+  .main-btn{
+    font-size:0.85rem;
+    padding:10px 24px;
+    bottom:7vh;
+  }
+}
+
+/* iPhone notch and home indicator fix */
+@supports (padding-bottom: env(safe-area-inset-bottom)){
+  @media(max-width:900px){
+    .main-btn{
+      bottom:calc(8vh + env(safe-area-inset-bottom));
+    }
+  }
 }
 </style>
 </head>
@@ -346,7 +423,7 @@ to heal,
 to choose each other over and again.
 Whenever you are ready darling, one step at a time. ❤️`,"🕊️ Whenever you're ready"],
 
-["22.%20Last%20slide%20bear%20hugs.png",`I love you and I mean it.
+["22.%20Last%20slide%20bear%20hugs.png",`I love you, Hrithik. And I mean it.
 This song -> Headphones over the ears -> Volume turned to maxx -> Eyes closed.
 This is exactly how I feel for you.
 So, enjoy it and know that I'm thinking about you 🧸💋`,null]
