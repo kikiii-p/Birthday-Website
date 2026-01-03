@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>For You 🐻</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  font-family:'Inter',sans-serif;
+  background:radial-gradient(circle at top,#1b1f3b,#0b0d18);
+  color:#f5f5f5;
+  overflow:hidden;
+}
+
+.slide{
+  display:none;
+  height:100vh;
+  width:100vw;
+  padding:5vh 5vw;
+  position:relative;
+}
+
+.slide.active{
+  display:flex;
+  flex-direction:column;
+}
+
+.content{
+  flex:1;
+  display:flex;
+  gap:4vw;
+}
+
+.image-box{
+  flex:7;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.image-box img{
+  width:70%;
+  height:100vh;
+  object-fit:cover;
+  border-radius:24px;
+  box-shadow:0 20px 50px rgba(0,0,0,.6);
+}
+
+.text-box{
+  flex:3;
+  display:flex;
+  align-items:center;
+  font-size:1.05rem;
+  line-height:1.7;
+  white-space:pre-line;
+}
+
+/* Main CTA */
+.main-btn{
+  position:fixed;
+  bottom:3vh;
+  right:3vw;
+  padding:14px 32px;
+  font-size:1rem;
+  border:none;
+  border-radius:999px;
+  background:linear-gradient(135deg,#ff6b9a,#ff4d6d);
+  color:white;
+  cursor:pointer;
+  box-shadow:0 10px 30px rgba(255,77,109,.5);
+  z-index:1000;
+}
+
+.main-btn:hover{transform:scale(1.05)}
+
+/* Back Button */
+.back-btn{
+  position:fixed;
+  top:3vh;
+  left:3vw;
+  padding:8px 14px;
+  font-size:.85rem;
+  border-radius:18px;
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.25);
+  color:white;
+  cursor:pointer;
+  z-index:999;
+}
+
+/* Rain effect */
+.raindrop{
+  position:absolute;
+  width:2px;
+  height:60px;
+  background:linear-gradient(transparent,rgba(174,194,224,.6));
+  animation:fall linear infinite;
+  pointer-events:none;
+}
+
+@keyframes fall{
+  to{transform:translateY(100vh)}
+}
+
+/* Cold mist effect */
+.mist{
+  position:absolute;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  overflow:hidden;
+}
+
+.mist-particle{
+  position:absolute;
+  background:radial-gradient(circle,rgba(200,220,255,.3),transparent);
+  border-radius:50%;
+  animation:float linear infinite;
+}
+
+@keyframes float{
+  0%{transform:translateY(100vh) translateX(0)}
+  100%{transform:translateY(-20vh) translateX(30px)}
+}
+
+/* Glow pulse */
+@keyframes glow-pulse{
+  0%,100%{filter:brightness(1) drop-shadow(0 0 20px rgba(255,182,193,.4))}
+  50%{filter:brightness(1.3) drop-shadow(0 0 40px rgba(255,182,193,.8))}
+}
+
+.glow-pulse .image-box img{
+  animation:glow-pulse 2s ease-in-out infinite;
+}
+
+/* Spark particles */
+.spark{
+  position:absolute;
+  width:4px;
+  height:4px;
+  background:#ffd700;
+  border-radius:50%;
+  pointer-events:none;
+  animation:sparkle 1.5s ease-out infinite;
+}
+
+@keyframes sparkle{
+  0%{transform:scale(0) translate(0,0);opacity:1}
+  100%{transform:scale(1) translate(var(--tx),var(--ty));opacity:0}
+}
+
+/* Floating leaves */
+.leaf{
+  position:absolute;
+  width:20px;
+  height:20px;
+  background:rgba(144,238,144,.7);
+  clip-path:ellipse(40% 50% at 50% 50%);
+  pointer-events:none;
+  animation:leaf-fall linear infinite;
+}
+
+@keyframes leaf-fall{
+  0%{transform:translateY(-10vh) rotate(0deg)}
+  100%{transform:translateY(110vh) rotate(360deg)}
+}
+
+/* Shimmer effect */
+.shimmer{
+  position:absolute;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  overflow:hidden;
+}
+
+.shimmer-wave{
+  position:absolute;
+  width:200%;
+  height:200%;
+  background:radial-gradient(circle,transparent 40%,rgba(255,255,255,.15) 50%,transparent 60%);
+  animation:shimmer-move 4s ease-in-out infinite;
+}
+
+@keyframes shimmer-move{
+  0%,100%{transform:translate(-50%,-50%) scale(.8);opacity:0}
+  50%{transform:translate(-25%,-25%) scale(1.2);opacity:1}
+}
+
+/* Mobile */
+@media(max-width:900px){
+  .content{flex-direction:column}
+  .image-box img{height:45vh}
+  .main-btn{bottom:2vh;right:5vw}
+}
+</style>
+</head>
+
+<body>
+
+<div id="slides"></div>
+
+<audio id="song">
+  <source src="https://raw.githubusercontent.com/kikiii-p/0401/main/I%20wanna%20be%20yours%20-%20Artic%20Monkeys.mpeg" type="audio/mpeg">
+</audio>
+
+<script>
+const base="https://raw.githubusercontent.com/kikiii-p/0401/main/";
+let current=0;
+let isPlaying=false;
+
+const slidesData=[
+
+["1.%20Batman%20standing%20alone.jpeg",`Happy Birthday, my Dark Knight. 🐻🍰
+I see you standing alone on rooftops you never asked for,
+carrying a city on your shoulders,
+saving everyone while quietly forgetting yourself.
+Tonight isn't about Gotham.
+Tonight is about you. 🪬`,"👉 Step into your story"],
+
+["2.%20Birthday%20celebration.jpeg",`Another year older, 👴🏼
+another year stronger, 💪🏻
+another year hotter, 🥵
+another year of surviving things most people never see. 🥹
+I hope this birthday reminds you that you deserve to be celebrated too. 💎`,"🎂 Let's celebrate you"],
+
+["3.%20Dark%20night%20together.jpeg",`There will be nights this dark,
+where the world feels heavy and endless.
+I won't rush you through them.
+I'll sit quietly beside you until morning comes, pinky promise. 🫱🏻‍🫲🏼`,"🌙 Stay a little longer"],
+
+["4.%20Tired%20Batman%20.jpeg",`Even heroes get tired.
+Even the strongest hearts need rest.
+And I assure that you don't have to be brave with me all the time. 😚💖`,"🤍 You can rest here"],
+
+["5.%20umbrella%20tone.jpeg",`Some sunsets look beautiful from a distance,
+but feel lonely up close.
+And if you ever feel that way, just know that you don't have to hold the umbrella alone. I'll always be there with you and for 👫🏻`,"☂️ You're not alone"],
+
+["6.%20Fighting%20scene.jpeg",`We might fight.
+We might misunderstand.
+We might stumble.
+I promise and assure you that I will never walk away when things get harder. 💯🫶🏻`,"🫶🏻 Still choosing us"],
+
+["7.%20Storm%20.jpeg",`Even storms pass.
+Even soaked capes dry again.
+And you don't have to believe that at the moment.
+I'll believe it for both of us. 🧚🏻‍♀️`,"🌧️ Through the storm"],
+
+["8.%20Cold.jpeg",`When the world turns cold,
+I won't ask you for your jacket.
+I'll stand beside you close enough,
+warming you in bear hugs
+until the heat finds us both,
+learning how to survive on a planet
+where love was never meant to exist
+without leaving either of us freezing. ❤️‍🩹`,"🐻 Come closer"],
+
+["9.%20Moon.jpeg",`I know you're scared.
+I'm scared too.
+Life indeed is scary and full of surprises and I know that problems are going to be a part and parcel.
+Despite all of this, I'm sure I want to do life with you. 👩🏻‍❤️‍👨🏻`,"✨ Even if we're scared"],
+
+["10.%20Bench.jpeg",`Some days won't need words.
+Just a shared view,
+a quiet bench,
+ your shoulder to lean on and knowing that you chose to stay. 🧸`,"🧸 Sit with me"],
+
+["11.%20Sea.jpeg",`Life is rough.
+And the waves won't ask permission.
+If I'm going to face them then I want it to be with you. 🥰`,"🌊 Let's face it together"],
+
+["12.%20dancing.jpeg",`And sometimes,
+we'll forget the world exists.
+Just two souls, laughing, dancing and cheering for each other.. where no no armor is required. 💃🏻🕺🏻`,"💃🏻 Forget the world"],
+
+["13.%20Embrace.jpeg",`This is what I imagine..
+not perfection,
+not promises,
+just warmth in a world that's been too cold. 💕`,"🤍 This is what I imagine"],
+
+["14.%20Fireworks%20.jpeg",`To small celebrations that no one else sees.
+To quiet wins that still deserve applause.
+To cheering for each other's strength,
+holding space for each other's failures,
+and clapping the loudest when the world stays silent.
+And to moments that feel like fireworks..
+not because they're loud,
+but because they're ours. ✨`,"✨ Celebrate us"],
+
+["15.%20Moonlit%20lake%20.jpeg",`Under the same moon,
+carrying different fears,
+learning the same courage.
+We don't need to know the whole path yet.
+We don't need all the answers tonight.
+Just honesty.
+Just patience.
+Just choosing each other 🌻`,"🌕 One step at a time"],
+
+["16.%20Kitchen%20.jpeg",`From cooking for you
+to cooking with you,
+may it be a midnight snack, or half-burnt food,
+you stealing the last bite just to annoy me,
+I just want all this with only you. 🍕🍽️
+(P.S. tumhe kabhi bhooka sone na du)`,"🍕 Everyday magic"],
+
+["17.%20Forest%20.jpeg",`When things get too loud,
+we can disappear for a while.
+No masks.
+No roles.
+Just breathing, holding each other's hands. 🫴🏻`,"🌲 Let's breathe"],
+
+["18.%20Sleeping%20on%20him%20.jpeg",`And there will come a time
+when we're perfectly comfortable
+in these safe silences.
+Something healing lives there..
+no explanations,
+no expectations,
+just closeness that doesn't need words. 🫂`,"🫂 Stay here"],
+
+["19.%20Playful%20.jpeg",`And maybe someday…
+when the walls are lower
+and trust feels safer,
+we'll smile at how close we've grown, without ever forcing it. 💋`,"💋 Slowly…"],
+
+["20.%20personal%20space.jpeg",`You like your space.
+I like mine too.
+There will be pauses, silences,
+moments where we retreat into ourselves
+to breathe, to think, to just be.
+But we won't shut down on each other.
+Even in the quiet, we will be side by side, under the same sky. 🌍`,"🌌 Side by side"],
+
+["21.%20Freedom%20.jpeg",`Let's not cage love.
+Let's not rush it.
+Let's not run from it either.
+Let's be free..
+to feel,
+to heal,
+to choose each other over and again.
+Whenever you are ready darling, one step at a time. ❤️`,"🕊️ Whenever you're ready"],
+
+["22.%20Last%20slide%20bear%20hugs.png",`I love you and I mean it.
+This song -> Headphones over the ears -> Volume turned to maxx -> Eyes closed.
+This is exactly how I feel for you.
+So, enjoy it and know that I'm thinking about you 🧸💋`,null]
+];
+
+const slidesDiv=document.getElementById("slides");
+
+slidesData.forEach((s,i)=>{
+  let effectClass='';
+  if(i===4) effectClass='rain-effect';
+  if(i===7) effectClass='mist-effect';
+  if(i===11) effectClass='glow-pulse';
+  if(i===13) effectClass='spark-effect';
+  if(i===16) effectClass='leaf-effect';
+  if(i===21) effectClass='shimmer-effect';
+
+  slidesDiv.innerHTML+=`
+  <div class="slide ${i===0?'active':''} ${effectClass}">
+    ${i>0?'<button class="back-btn" onclick="back()">← Back</button>':''}
+    <div class="content">
+      <div class="image-box">
+        <img src="${base+s[0]}">
+      </div>
+      <div class="text-box">${s[1]}</div>
+    </div>
+    ${s[2]?`<button class="main-btn" onclick="next()">${s[2]}</button>`:''}
+    ${i===21?`<button class="main-btn" id="playBtn" onclick="toggleSong()">🎧 Play Song</button>`:''}
+  </div>`;
+});
+
+const slides=document.querySelectorAll(".slide");
+
+// Add rain to slide 5
+function addRain(slide){
+  for(let i=0;i<50;i++){
+    const drop=document.createElement('div');
+    drop.className='raindrop';
+    drop.style.left=Math.random()*100+'%';
+    drop.style.animationDuration=(Math.random()*1+.5)+'s';
+    drop.style.animationDelay=Math.random()*2+'s';
+    slide.appendChild(drop);
+  }
+}
+
+// Add mist to slide 8
+function addMist(slide){
+  const mist=document.createElement('div');
+  mist.className='mist';
+  for(let i=0;i<20;i++){
+    const p=document.createElement('div');
+    p.className='mist-particle';
+    p.style.width=(Math.random()*100+50)+'px';
+    p.style.height=(Math.random()*100+50)+'px';
+    p.style.left=Math.random()*100+'%';
+    p.style.animationDuration=(Math.random()*10+15)+'s';
+    p.style.animationDelay=Math.random()*5+'s';
+    mist.appendChild(p);
+  }
+  slide.appendChild(mist);
+}
+
+// Add sparks to slide 14
+function addSparks(slide){
+  setInterval(()=>{
+    const spark=document.createElement('div');
+    spark.className='spark';
+    spark.style.left=Math.random()*100+'%';
+    spark.style.top=Math.random()*100+'%';
+    spark.style.setProperty('--tx',(Math.random()*200-100)+'px');
+    spark.style.setProperty('--ty',(Math.random()*200-100)+'px');
+    slide.appendChild(spark);
+    setTimeout(()=>spark.remove(),1500);
+  },300);
+}
+
+// Add leaves to slide 17
+function addLeaves(slide){
+  for(let i=0;i<15;i++){
+    const leaf=document.createElement('div');
+    leaf.className='leaf';
+    leaf.style.left=Math.random()*100+'%';
+    leaf.style.animationDuration=(Math.random()*5+8)+'s';
+    leaf.style.animationDelay=Math.random()*5+'s';
+    slide.appendChild(leaf);
+  }
+}
+
+// Add shimmer to slide 22
+function addShimmer(slide){
+  const shimmer=document.createElement('div');
+  shimmer.className='shimmer';
+  const wave=document.createElement('div');
+  wave.className='shimmer-wave';
+  wave.style.left='50%';
+  wave.style.top='50%';
+  shimmer.appendChild(wave);
+  slide.appendChild(shimmer);
+}
+
+// Initialize effects
+addRain(slides[4]);
+addMist(slides[7]);
+addSparks(slides[13]);
+addLeaves(slides[16]);
+addShimmer(slides[21]);
+
+function next(){
+  slides[current].classList.remove("active");
+  current++;
+  slides[current].classList.add("active");
+  if(current===1) confetti({particleCount:220,spread:140});
+}
+
+function back(){
+  slides[current].classList.remove("active");
+  current--;
+  slides[current].classList.add("active");
+}
+
+/* PLAY / PAUSE TOGGLE */
+function toggleSong(){
+  const btn=document.getElementById("playBtn");
+  const song=document.getElementById("song");
+
+  if(song.paused){
+    song.play();
+    btn.innerText="⏸ Pause Song";
+  }else{
+    song.pause();
+    btn.innerText="🎧 Play Song";
+  }
+}
+</script>
+
+</body>
+</html>
